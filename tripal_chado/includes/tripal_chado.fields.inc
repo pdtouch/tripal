@@ -66,7 +66,7 @@ function tripal_chado_bundle_fields_info_base(&$info, $details, $entity_type, $b
   $columns = $schema['fields'];
   foreach ($columns as $column_name => $details) {
 
-    // Skip the source columns  in the analysis table. We have a custom
+    // Skip the source columns in the analysis table. We have a custom
     // field for those columns
     if ($table_name == 'analysis' and ($column_name == 'sourceuri' or
         $column_name == 'sourceversion' or $column_name == 'sourcename')) {
@@ -619,6 +619,52 @@ function tripal_chado_bundle_fields_info_linker(&$info, $details, $entity_type, 
   $cvterm_id = $details['chado_cvterm_id'];
   $type_value = $details['chado_type_value'];
 
+  // ANALYSES
+  $analysis_table = $table_name . '_analysis';
+  if (!chado_table_exists($analysis_table)) {
+    $analysis_table = 'analysis_' . $table_name;
+  }
+  // Also supports analysisfeature table.
+  if (!chado_table_exists($analysis_table)) {
+    $analysis_table = 'analysis' . $table_name;
+  }
+  if (chado_table_exists($analysis_table)) {
+    $schema = chado_get_schema($analysis_table);
+    $pkey = $schema['primary key'][0];
+    $field_name = $table_name . '_analysis';
+    $field_type = 'chado_linker__analysis';
+    $info[$field_name] = [
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'locked' => FALSE,
+      'storage' => [
+        'type' => 'field_chado_storage',
+      ],
+    ];
+  }
+
+  // ASSAYS
+  $assay_table = $table_name . '_assay';
+  if (!chado_table_exists($assay_table)) {
+    $assay_table = 'assay_' . $table_name;
+  }
+  if (chado_table_exists($assay_table)) {
+    $schema = chado_get_schema($assay_table);
+    $pkey = $schema['primary key'][0];
+    $field_name = $table_name . '_assay';
+    $field_type = 'chado_linker__assay';
+    $info[$field_name] = [
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'locked' => FALSE,
+      'storage' => [
+        'type' => 'field_chado_storage',
+      ],
+    ];
+  }
+
   // CONTACTS
   $contact_table = $table_name . '_contact';
   if (chado_table_exists($contact_table)) {
@@ -654,7 +700,7 @@ function tripal_chado_bundle_fields_info_linker(&$info, $details, $entity_type, 
   }
 
   // EXPRESSION
-  // TODO: this should only show up on gene or mRNA bunldes, not every feature.
+  // TODO: this should only show up on gene or mRNA bundles, not every feature.
   //   $expression_table = $table_name . '_expression';
   //   if (chado_table_exists($expression_table)) {
   //     $field_name = 'go__gene_expression';
@@ -670,10 +716,56 @@ function tripal_chado_bundle_fields_info_linker(&$info, $details, $entity_type, 
   //     );
   //   }
 
+  // FEATURES
+  $feature_table = $table_name . '_feature';
+  if (!chado_table_exists($feature_table)) {
+    $feature_table = 'feature_' . $table_name;
+  }
+  // Also supports analysisfeature table.
+  if (!chado_table_exists($feature_table)) {
+    $feature_table = $table_name . 'feature';
+  }
+  if (chado_table_exists($feature_table)) {
+    $schema = chado_get_schema($feature_table);
+    $pkey = $schema['primary key'][0];
+    $field_name = $table_name . '_feature';
+    $field_type = 'chado_linker__feature';
+    $info[$field_name] = [
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'locked' => FALSE,
+      'storage' => [
+        'type' => 'field_chado_storage',
+      ],
+    ];
+  }
+
   // FEATURELOC
   if ($table_name == 'feature') {
     $field_name = 'data__sequence_coordinates';
     $field_type = 'data__sequence_coordinates';
+    $info[$field_name] = [
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'locked' => FALSE,
+      'storage' => [
+        'type' => 'field_chado_storage',
+      ],
+    ];
+  }
+
+  // FEATUREMAPS
+  $featuremap_table = $table_name . '_featuremap';
+  if (!chado_table_exists($featuremap_table)) {
+    $featuremap_table = 'featuremap_' . $table_name;
+  }
+  if (chado_table_exists($featuremap_table)) {
+    $schema = chado_get_schema($featuremap_table);
+    $pkey = $schema['primary key'][0];
+    $field_name = $table_name . '_featuremap';
+    $field_type = 'chado_linker__featuremap';
     $info[$field_name] = [
       'field_name' => $field_name,
       'type' => $field_type,
@@ -731,6 +823,28 @@ function tripal_chado_bundle_fields_info_linker(&$info, $details, $entity_type, 
   //       ),
   //     );
   //   }
+
+  // PROJECTS
+  // supports project as either prefix or suffix of linker table name
+  $project_table = 'project_' . $table_name;
+  if (!chado_table_exists($project_table)) {
+    $project_table = $table_name . '_project';
+  }
+  if (chado_table_exists($project_table)) {
+    $schema = chado_get_schema($project_table);
+    $pkey = $schema['primary key'][0];
+    $field_name = $table_name . '_project';
+    $field_type = 'chado_linker__project';
+    $info[$field_name] = [
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'locked' => FALSE,
+      'storage' => [
+        'type' => 'field_chado_storage',
+      ],
+    ];
+  }
 
   // PROPERTIES
   $prop_table = $table_name . 'prop';
@@ -841,6 +955,54 @@ function tripal_chado_bundle_fields_info_linker(&$info, $details, $entity_type, 
     ];
   }
 
+  // STOCKS
+  // supports stock as either prefix or suffix of linker table name
+  $stock_table = $table_name . '_stock';
+  // Unfortunately a special case here, mainlab tripal defines a chado.feature_stock
+  // table conflicting with the tripal chado.stock_feature table, similarly with
+  // chado.featuremap_stock, chado.library_stock
+  if (($table_name == 'feature') or ($table_name == 'featuremap')
+    or ($table_name == 'library') or (!chado_table_exists($stock_table))) {
+    $stock_table = 'stock_' . $table_name;
+  }
+  if (chado_table_exists($stock_table)) {
+    $schema = chado_get_schema($stock_table);
+    $pkey = $schema['primary key'][0];
+    $field_name = $table_name . '_stock';
+    $field_type = 'chado_linker__stock';
+    $info[$field_name] = [
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'locked' => FALSE,
+      'storage' => [
+        'type' => 'field_chado_storage',
+      ],
+    ];
+  }
+
+  // STUDIES
+  // supports study as either prefix or suffix of linker table name
+  $study_table = 'study_' . $table_name;
+  if (!chado_table_exists($study_table)) {
+    $study_table = $table_name . '_study';
+  }
+  if (chado_table_exists($study_table)) {
+    $schema = chado_get_schema($study_table);
+    $pkey = $schema['primary key'][0];
+    $field_name = $table_name . '_study';
+    $field_type = 'chado_linker__study';
+    $info[$field_name] = [
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'locked' => FALSE,
+      'storage' => [
+        'type' => 'field_chado_storage',
+      ],
+    ];
+  }
+
   // SYNONYMS
   $syn_table = $table_name . '_synonym';
   if (chado_table_exists($syn_table)) {
@@ -925,7 +1087,7 @@ function tripal_chado_bundle_instances_info_base(&$info, $entity_type, $bundle, 
   $columns = $schema['fields'];
   foreach ($columns as $column_name => $details) {
 
-    // Skip the source columns  in the analysis table. We have a custom
+    // Skip the source columns in the analysis table. We have a custom
     // field for those columns
     if ($table_name == 'analysis' and ($column_name == 'sourceuri' or
         $column_name == 'sourceversion' or $column_name == 'sourcename')) {
@@ -2269,6 +2431,88 @@ function tripal_chado_bundle_instances_info_linker(&$info, $entity_type, $bundle
   $cvterm_id = $details['chado_cvterm_id'];
   $type_value = $details['chado_type_value'];
 
+  // ANALYSES
+  $analysis_table = $table_name . '_analysis';
+  if (!chado_table_exists($analysis_table)) {
+    $analysis_table = 'analysis_' . $table_name;
+  }
+  // Also supports analysisfeature table.
+  if (!chado_table_exists($analysis_table)) {
+    $analysis_table = 'analysis' . $table_name;
+  }
+  if (chado_table_exists($analysis_table)) {
+    $field_name = $table_name . '_analysis';
+    $info[$field_name] = $info[$field_name] = [
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Analysis',
+      'description' => 'Associates an analysis with this record',
+      'required' => FALSE,
+      'settings' => [
+        'auto_attach' => FALSE,
+        'chado_table' => $analysis_table,
+        'base_table' => $table_name,
+        'chado_column' => 'analysis_id',
+        'term_accession' => 'C25391',
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'Analysis',
+      ],
+      'widget' => [
+        'type' => 'chado_linker__analysis_widget',
+        'settings' => [
+          'display_label' => 1,
+        ],
+      ],
+      'display' => [
+        'default' => [
+          'label' => 'inline',
+          'type' => 'chado_linker__analysis_formatter',
+          'settings' => [],
+        ],
+      ],
+    ];
+  }
+
+  // ASSAYS
+  $assay_table = $table_name . '_assay';
+  if (!chado_table_exists($assay_table)) {
+    $assay_table = 'assay_' . $table_name;
+  }
+  if (chado_table_exists($assay_table)) {
+    $field_name = $table_name . '_assay';
+    $info[$field_name] = $info[$field_name] = [
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Assay',
+      'description' => 'Associates an assay with this record',
+      'required' => FALSE,
+      'settings' => [
+        'auto_attach' => FALSE,
+        'chado_table' => $assay_table,
+        'base_table' => $table_name,
+        'chado_column' => 'assay_id',
+        'term_accession' => 'C60819',
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'Assay',
+      ],
+      'widget' => [
+        'type' => 'chado_linker__assay_widget',
+        'settings' => [
+          'display_label' => 1,
+        ],
+      ],
+      'display' => [
+        'default' => [
+          'label' => 'inline',
+          'type' => 'chado_linker__assay_formatter',
+          'settings' => [],
+        ],
+      ],
+    ];
+  }
+
   // CONTACTS
   $contact_table = $table_name . '_contact';
   if (chado_table_exists($contact_table)) {
@@ -2297,7 +2541,7 @@ function tripal_chado_bundle_instances_info_linker(&$info, $entity_type, $bundle
       ],
       'display' => [
         'default' => [
-          'label' => 'hidden',
+          'label' => 'inline',
           'type' => 'chado_linker__contact_formatter',
           'settings' => [],
         ],
@@ -2383,6 +2627,49 @@ function tripal_chado_bundle_instances_info_linker(&$info, $entity_type, $bundle
   //     );
   //   }
 
+  // FEATURES
+  $feature_table = $table_name . '_feature';
+  if (!chado_table_exists($feature_table)) {
+    $feature_table = 'feature_' . $table_name;
+  }
+  // Also supports analysisfeature table.
+  if (!chado_table_exists($feature_table)) {
+    $feature_table = $table_name . 'feature';
+  }
+  if (chado_table_exists($feature_table)) {
+    $field_name = $table_name . '_feature';
+    $info[$field_name] = $info[$field_name] = [
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Feature',
+      'description' => 'Associates a feature with this record',
+      'required' => FALSE,
+      'settings' => [
+        'auto_attach' => FALSE,
+        'chado_table' => $feature_table,
+        'base_table' => $table_name,
+        'chado_column' => 'feature_id',
+        'term_accession' => 'C73619',
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'Feature',
+      ],
+      'widget' => [
+        'type' => 'chado_linker__feature_widget',
+        'settings' => [
+          'display_label' => 1,
+        ],
+      ],
+      'display' => [
+        'default' => [
+          'label' => 'inline',
+          'type' => 'chado_linker__feature_formatter',
+          'settings' => [],
+        ],
+      ],
+    ];
+  }
+
   // FEATURELOC
   if ($table_name == 'feature') {
     $field_name = 'data__sequence_coordinates';
@@ -2415,6 +2702,45 @@ function tripal_chado_bundle_instances_info_linker(&$info, $entity_type, $bundle
         'default' => [
           'label' => 'hidden',
           'type' => 'data__sequence_coordinates_formatter',
+          'settings' => [],
+        ],
+      ],
+    ];
+  }
+
+  // FEATUREMAPS
+  $featuremap_table = $table_name . '_featuremap';
+  if (!chado_table_exists($featuremap_table)) {
+    $featuremap_table = 'featuremap_' . $table_name;
+  }
+  if (chado_table_exists($featuremap_table)) {
+    $field_name = $table_name . '_featuremap';
+    $info[$field_name] = $info[$field_name] = [
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Featuremap',
+      'description' => 'Associates a featuremap with this record',
+      'required' => FALSE,
+      'settings' => [
+        'auto_attach' => FALSE,
+        'chado_table' => $featuremap_table,
+        'base_table' => $table_name,
+        'chado_column' => 'featuremap_id',
+        'term_accession' => '1274',
+        'term_vocabulary' => 'data',
+        'term_name' => 'Map',
+      ],
+      'widget' => [
+        'type' => 'chado_linker__featuremap_widget',
+        'settings' => [
+          'display_label' => 1,
+        ],
+      ],
+      'display' => [
+        'default' => [
+          'label' => 'inline',
+          'type' => 'chado_linker__featuremap_formatter',
           'settings' => [],
         ],
       ],
@@ -2533,6 +2859,46 @@ function tripal_chado_bundle_instances_info_linker(&$info, $entity_type, $bundle
   //       ),
   //     );
   //   }
+
+  // PROJECTS
+  // supports project as either prefix or suffix of linker table name
+  $project_table = 'project_' . $table_name;
+  if (!chado_table_exists($project_table)) {
+    $project_table = $table_name . '_project';
+  }
+  if (chado_table_exists($project_table)) {
+    $field_name = $table_name . '_project';
+    $info[$field_name] = $info[$field_name] = [
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Project',
+      'description' => 'Associates a project with this record',
+      'required' => FALSE,
+      'settings' => [
+        'auto_attach' => FALSE,
+        'chado_table' => $project_table,
+        'base_table' => $table_name,
+        'chado_column' => 'project_id',
+        'term_accession' => 'C47885',
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'Project',
+      ],
+      'widget' => [
+        'type' => 'chado_linker__project_widget',
+        'settings' => [
+          'display_label' => 1,
+        ],
+      ],
+      'display' => [
+        'default' => [
+          'label' => 'inline',
+          'type' => 'chado_linker__project_formatter',
+          'settings' => [],
+        ],
+      ],
+    ];
+  }
 
   // PROPERTIES
   $prop_table = $table_name . 'prop';
@@ -2757,6 +3123,90 @@ function tripal_chado_bundle_instances_info_linker(&$info, $entity_type, $bundle
             'title' => 'Relationships',
             'empty' => 'There are no relationships',
           ],
+        ],
+      ],
+    ];
+  }
+
+  // STOCKS
+  // supports stock as either prefix or suffix of linker table name
+  $stock_table = $table_name . '_stock';
+  // Unfortunately a special case here, mainlab tripal defines a chado.feature_stock
+  // table conflicting with the tripal chado.stock_feature table, similarly with
+  // chado.featuremap_stock, chado.library_stock
+  if (($table_name == 'feature') or ($table_name == 'featuremap')
+    or ($table_name == 'library') or (!chado_table_exists($stock_table))) {
+    $stock_table = 'stock_' . $table_name;
+  }
+  if (chado_table_exists($stock_table)) {
+    $field_name = $table_name . '_stock';
+    $info[$field_name] = $info[$field_name] = [
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Stock',
+      'description' => 'Associates a stock with this record',
+      'required' => FALSE,
+      'settings' => [
+        'auto_attach' => FALSE,
+        'chado_table' => $stock_table,
+        'base_table' => $table_name,
+        'chado_column' => 'stock_id',
+        'term_accession' => 'C48288',
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'Stock',
+      ],
+      'widget' => [
+        'type' => 'chado_linker__stock_widget',
+        'settings' => [
+          'display_label' => 1,
+        ],
+      ],
+      'display' => [
+        'default' => [
+          'label' => 'inline',
+          'type' => 'chado_linker__stock_formatter',
+          'settings' => [],
+        ],
+      ],
+    ];
+  }
+
+  // STUDIES
+  // supports study as either prefix or suffix of linker table name
+  $study_table = 'study_' . $table_name;
+  if (!chado_table_exists($study_table)) {
+    $study_table = $table_name . '_study';
+  }
+  if (chado_table_exists($study_table)) {
+    $field_name = $table_name . '_study';
+    $info[$field_name] = $info[$field_name] = [
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Study',
+      'description' => 'Associates a study with this record',
+      'required' => FALSE,
+      'settings' => [
+        'auto_attach' => FALSE,
+        'chado_table' => $study_table,
+        'base_table' => $table_name,
+        'chado_column' => 'study_id',
+        'term_accession' => 'C63536',
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'Study',
+      ],
+      'widget' => [
+        'type' => 'chado_linker__study_widget',
+        'settings' => [
+          'display_label' => 1,
+        ],
+      ],
+      'display' => [
+        'default' => [
+          'label' => 'inline',
+          'type' => 'chado_linker__study_formatter',
+          'settings' => [],
         ],
       ],
     ];

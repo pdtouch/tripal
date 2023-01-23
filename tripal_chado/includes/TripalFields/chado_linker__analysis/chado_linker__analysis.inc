@@ -1,6 +1,6 @@
 <?php
 
-class chado_linker__contact extends ChadoField {
+class chado_linker__analysis extends ChadoField {
 
 
   // --------------------------------------------------------------------------
@@ -8,15 +8,14 @@ class chado_linker__contact extends ChadoField {
   //
   // The following constants SHOULD be set for each descendent class.  They are
   // used by the static functions to provide information to Drupal about
-  // the field and it's default widget and formatter.
+  // the field and its default widget and formatter.
   // --------------------------------------------------------------------------
 
   // The default label for this field.
-  public static $default_label = 'Contacts';
+  public static $default_label = 'Analyses';
 
-  // The default description for this field.
-  public static $description = 'Associates an indviddual or organization with
-          this record';
+  // The default uniquename for this field.
+  public static $uniquename = 'Associates an analysis with this record';
 
   // Provide a list of instance specific settings. These can be accessed within
   // the instanceSettingsForm.  When the instanceSettingsForm is submitted
@@ -27,11 +26,11 @@ class chado_linker__contact extends ChadoField {
   // required for all TripalFields.
   public static $default_instance_settings = [
     // The short name for the vocabulary (e.g. schema, SO, GO, PATO, etc.).
-    'term_vocabulary' => 'local',
+    'term_vocabulary' => 'NCIT',
     // The name of the term.
-    'term_name' => 'contact',
+    'term_name' => 'Analysis',
     // The unique ID (i.e. accession) of the term.
-    'term_accession' => 'contact',
+    'term_accession' => 'C25391',
     // Set to TRUE if the site admin is allowed to change the term
     // type. This will create form elements when editing the field instance
     // to allow the site admin to change the term settings above.
@@ -39,10 +38,10 @@ class chado_linker__contact extends ChadoField {
   ];
 
   // The default widget for this field.
-  public static $default_widget = 'chado_linker__contact_widget';
+  public static $default_widget = 'chado_linker__analysis_widget';
 
   // The default formatter for this field.
-  public static $default_formatter = 'chado_linker__contact_formatter';
+  public static $default_formatter = 'chado_linker__analysis_formatter';
 
   // --------------------------------------------------------------------------
   //              PROTECTED CLASS MEMBERS -- DO NOT OVERRIDE
@@ -63,9 +62,8 @@ class chado_linker__contact extends ChadoField {
   public function elementInfo() {
 
     $field_term = $this->getFieldTermID();
-    $type_term = chado_get_semweb_term('contact', 'type_id');
-    $name_term = chado_get_semweb_term('contact', 'name');
-    $description_term = chado_get_semweb_term('contact', 'description');
+    $name_term = chado_get_semweb_term('analysis', 'name');
+    $description_term = chado_get_semweb_term('analysis', 'description');
 
     return [
       $field_term => [
@@ -75,20 +73,10 @@ class chado_linker__contact extends ChadoField {
         'type' => 'xs:complexType',
         'readonly' => FALSE,
         'elements' => [
-          $type_term => [
-            'searchable' => TRUE,
-            'label' => 'Contact Type',
-            'help' => 'The type of contact',
-            'operations' => ['eq', 'ne', 'contains', 'starts'],
-            'sortable' => TRUE,
-            'type' => 'xs:string',
-            'readonly' => FALSE,
-            'required' => TRUE,
-          ],
           $name_term => [
             'searchable' => TRUE,
-            'label' => 'Contact Name',
-            'help' => 'The name of the contact.',
+            'label' => 'Analysis Name',
+            'help' => 'The name of the analysis.',
             'operations' => ['eq', 'ne', 'contains', 'starts'],
             'sortable' => TRUE,
             'type' => 'xs:string',
@@ -97,8 +85,8 @@ class chado_linker__contact extends ChadoField {
           ],
           $description_term => [
             'searchable' => TRUE,
-            'label' => 'Contact Description',
-            'help' => 'A description of the contact.',
+            'label' => 'Analysis Description',
+            'help' => 'A description of the analysis.',
             'operations' => ['contains'],
             'sortable' => TRUE,
             'type' => 'xs:string',
@@ -118,6 +106,7 @@ class chado_linker__contact extends ChadoField {
    * @see TripalField::load()
    */
   public function load($entity) {
+
     $record = $entity->chado_record;
 
     $field_name = $this->field['field_name'];
@@ -126,9 +115,9 @@ class chado_linker__contact extends ChadoField {
     $field_column = $this->instance['settings']['chado_column'];
     $base_table = $this->instance['settings']['base_table'];
 
-    $type_term = chado_get_semweb_term('contact', 'type_id');
-    $name_term = chado_get_semweb_term('contact', 'name');
-    $description_term = chado_get_semweb_term('contact', 'description');
+    $name_term = chado_get_semweb_term('analysis', 'name');
+    $description_term = chado_get_semweb_term('analysis', 'description');
+    $summary_term = 'NCIT:C25463'; // ncit:Count
 
     // Set some defaults for the empty record.
     $entity->{$field_name}['und'][0] = [
@@ -144,56 +133,78 @@ class chado_linker__contact extends ChadoField {
     $fkey_lcolumn = key($schema['foreign keys'][$base_table]['columns']);
     $fkey_rcolumn = $schema['foreign keys'][$base_table]['columns'][$fkey_lcolumn];
 
-    // If we don't have a chado record return before creating a stub for this field!
+    // If we don't have a chado record, return before creating a stub for this field!
     if (!$record) {
       return;
     }
 
-    // Set some defaults for the empty record.
-    $entity->{$field_name}['und'][0] = [
-      'value' => [],
-      'chado-' . $field_table . '__' . $pkey => '',
-      'chado-' . $field_table . '__' . $fkey_lcolumn => $record->$fkey_lcolumn,
-      'chado-' . $field_table . '__' . 'contact_id' => '',
-      // Ignore the synonym_sgml column for now.
-    ];
+    // Linker table name may have analysis as either prefix or suffix
+    $linker_table = $base_table . '_analysis';
+    if (!chado_table_exists($linker_table)) {
+      $linker_table = 'analysis_' . $base_table;
+    }
+    // Also support analysisfeature table with different naming scheme.
+    if (!chado_table_exists($linker_table)) {
+      $linker_table = 'analysis' . $base_table;
+    }
+    if (!chado_table_exists($linker_table)) { 
+      return;
+    }
 
-    $linker_table = $base_table . '_contact';
-    $options = [
-      'return_array' => 1,
-      'include_fk' => [
-        'contact_id' => [
-          'type_id' => [
-            'dbxref_id' => [
-              'db_id' => TRUE,
-            ],
-          ],
-        ],
-        $fkey_lcolumn => TRUE,
-      ],
-    ];
-    $record = chado_expand_var($record, 'table', $linker_table, $options);
-    $contact_linkers = $record->$linker_table;
-    if ($contact_linkers) {
-      foreach ($contact_linkers as $i => $contact_linker) {
-        $contact = $contact_linker->contact_id;
+    // Evaluate how many linked records there are, and if too many just show a summary.
+    $load_limit = variable_get('chado_linker_load_limit', 500);
+    if (array_key_exists('chado_linker_load_limit', $this->instance['settings'])) {
+      $load_limit = $this->instance['settings']['chado_linker_load_limit'];
+    }
+    $sql1 = 'SELECT COUNT(*) FROM {'.$linker_table.'} WHERE '.$fkey_lcolumn.' = :fkey_lcolumn_id';
+    $args1 = [':fkey_lcolumn_id' => $record->$fkey_lcolumn];
+    $count = chado_query($sql1, $args1)->fetchField();
+
+    if ($count <= $load_limit) {
+      // Since there could be many records, perform SQL query directly to reduce overhead.
+      $sql2 = 'SELECT LT.'.$pkey.' AS pkey_value, A.analysis_id, A.name, A.description'
+            . ' FROM {'.$linker_table.'} LT'
+            . ' LEFT JOIN {analysis} A ON LT.analysis_id = A.analysis_id'
+            . ' WHERE LT.'.$fkey_lcolumn.' = :analysis_id'
+            . ' ORDER BY LOWER(A.name)';
+      $args2 = [':analysis_id' => $record->$fkey_lcolumn];
+      $linkers = chado_query($sql2, $args2);
+
+      $i = 0;
+      while ( $linker = $linkers->fetchObject() ) {
         $entity->{$field_name}['und'][$i] = [
           'value' => [
-            $type_term => $contact->type_id ? $contact->type_id->name : '',
-            $name_term => $contact->name,
-            $description_term => $contact->description,
+            $name_term => $linker->name,
+            $description_term => $linker->description,
           ],
           // Add elements that are not part of the values but used by
           // the chado storage back-end for saving values.
-          'chado-' . $field_table . '__' . $pkey => $contact_linker->$pkey,
+          'chado-' . $field_table . '__' . $pkey => $linker->pkey_value,
           'chado-' . $field_table . '__' . $fkey_lcolumn => $record->$fkey_lcolumn,
-          'chado-' . $field_table . '__' . 'contact_id' => $contact->contact_id,
+          'chado-' . $field_table . '__' . 'analysis_id' => $linker->analysis_id,
+          // For the widget to work properly we will preform values.
+          'analysis_name' => $linker->name . ' [id: ' . $linker->analysis_id . ']',
         ];
-
-        if (property_exists($contact, 'entity_id')) {
-          $entity->{$field_name}['und'][$i]['value']['entity'] = 'TripalEntity:' . $contact->entity_id;
+        $entity_id = chado_get_record_entity_by_table('analysis', $linker->analysis_id);
+        if ($entity_id) {
+          $entity->{$field_name}['und'][$i]['value']['entity'] = 'TripalEntity:' . $entity_id;
         }
+        $i++;
       }
+    }
+    else {
+      // If too many records to display, just return a summary. The widget won't
+      // show any existing records, but can be used to add additional records.
+      // Web services will only show this summary.
+      $content = t('There are :count related analyses', [':count' => $count]);
+
+      // The formatter will check for the $summary_term key, and when
+      // present will display this summary and not display the usual table.
+      $entity->{$field_name}['und'][0] = [
+        'value' => [
+          $summary_term => $content,
+        ],
+      ];
     }
   }
 
@@ -205,38 +216,34 @@ class chado_linker__contact extends ChadoField {
     $operator = $condition['operator'];
 
     $field_term_id = $this->getFieldTermID();
-    $type_term = chado_get_semweb_term('contact', 'type_id');
-    $name_term = chado_get_semweb_term('contact', 'name');
-    $description_term = chado_get_semweb_term('contact', 'description');
+    $name_term = chado_get_semweb_term('analysis', 'name');
+    $description_term = chado_get_semweb_term('analysis', 'description');
 
-    $contact_linker = $this->instance['settings']['chado_table'];
+    $analysis_linker = $this->instance['settings']['chado_table'];
     $base_table = $this->instance['settings']['base_table'];
 
     // Get the FK that links to the base record.
-    $schema = chado_get_schema($contact_linker);
+    $schema = chado_get_schema($analysis_linker);
     $pkey = $schema['primary key'][0];
     $fkey_lcolumn = key($schema['foreign keys'][$base_table]['columns']);
     $fkey_rcolumn = $schema['foreign keys'][$base_table]['columns'][$fkey_lcolumn];
 
-    // Join the contact linker table and then join the contact table.
-    $calias = $contact_linker . '_contact';
-    $this->queryJoinOnce($query, $contact_linker, $alias, "base.$fkey_rcolumn = $alias.$fkey_lcolumn");
-    $this->queryJoinOnce($query, 'contact', $calias, "$calias.contact_id = $alias.contact_id");
+    // Join the analysis linker table and then join the analysis table.
+    $calias = 'analysis_' . $analysis_linker;
+    if (!chado_table_exists($calias)) {
+      $calias = $analysis_linker . '_analysis';
+    }
+    $this->queryJoinOnce($query, $analysis_linker, $alias, "base.$fkey_rcolumn = $alias.$fkey_lcolumn");
+    $this->queryJoinOnce($query, 'analysis', $calias, "$calias.analysis_id = $alias.analysis_id");
 
-    // Search by the contact name
+    // Search by the analysis name
     if ($condition['column'] == $field_term_id or
       $condition['column'] == $field_term_id . ',' . $name_term) {
       $query->condition("$calias.name", $condition['value'], $operator);
     }
-    // Search on the contact description.
+    // Search on the analysis description.
     if ($condition['column'] == $field_term_id . ',' . $description_term) {
       $query->condition("$calias.description", $condition['value'], $operator);
-    }
-    // Search on the contact type.
-    if ($condition['column'] == $field_term_id . ',' . $type_term) {
-      $talias = $contact_linker . '_contact_type';
-      $this->queryJoinOnce($query, 'cvterm', $talias, "$calias.type_id = $talias.cvterm_id");
-      $query->condition("$talias.name", $condition['value'], $operator);
     }
   }
 
@@ -246,47 +253,43 @@ class chado_linker__contact extends ChadoField {
   public function queryOrder($query, $order) {
     $alias = $this->field['field_name'];
     $field_term_id = $this->getFieldTermID();
-    $type_term = chado_get_semweb_term('contact', 'type_id');
-    $name_term = chado_get_semweb_term('contact', 'name');
-    $description_term = chado_get_semweb_term('contact', 'description');
+    $name_term = chado_get_semweb_term('analysis', 'name');
+    $description_term = chado_get_semweb_term('analysis', 'description');
 
-    $contact_linker = $this->instance['settings']['chado_table'];
+    $analysis_linker = $this->instance['settings']['chado_table'];
     $base_table = $this->instance['settings']['base_table'];
 
     // Get the FK that links to the base record.
-    $schema = chado_get_schema($contact_linker);
+    $schema = chado_get_schema($analysis_linker);
     $pkey = $schema['primary key'][0];
     $fkey_lcolumn = key($schema['foreign keys'][$base_table]['columns']);
     $fkey_rcolumn = $schema['foreign keys'][$base_table]['columns'][$fkey_lcolumn];
 
-    // Join the contact linker table and then join the contact table.
-    $calias = $contact_linker . '_contact';
-    $this->queryJoinOnce($query, $contact_linker, $alias, "base.$fkey_rcolumn = $alias.$fkey_lcolumn", "LEFT OUTER");
-    $this->queryJoinOnce($query, 'contact', $calias, "$calias.contact_id = $alias.contact_id", "LEFT OUTER");
+    // Join the analysis linker table and then join the analysis table.
+    $calias = 'analysis_' . $analysis_linker;
+    if (!chado_table_exists($calias)) {
+      $calias = $analysis_linker . '_analysis';
+    }
+    $this->queryJoinOnce($query, $analysis_linker, $alias, "base.$fkey_rcolumn = $alias.$fkey_lcolumn", "LEFT OUTER");
+    $this->queryJoinOnce($query, 'analysis', $calias, "$calias.analysis_id = $alias.analysis_id", "LEFT OUTER");
 
-    // Search by the contact name
+    // Search by the analysis name
     if ($order['column'] == $field_term_id or
       $order['column'] == $field_term_id . ',' . $name_term) {
       $query->orderBy("$calias.name", $order['direction']);
     }
-    // Search on the contact description.
+    // Search on the analysis description.
     if ($order['column'] == $field_term_id . ',' . $description_term) {
       $query->orderBy("$calias.description", $order['direction']);
-    }
-    // Search on the contact type.
-    if ($order['column'] == $field_term_id . ',' . $type_term) {
-      $talias = $contact_linker . '_contact_type';
-      $this->queryJoinOnce($query, 'cvterm', $talias, "$calias.type_id = $talias.cvterm_id", "LEFT OUTER");
-      $query->orderBy("$talias.name", $order['direction']);
     }
   }
 }
 
 
 /**
- * An Ajax callback for the pub widget.
+ * An Ajax callback for the widget.
  */
-function chado_linker__contact_widget_form_ajax_callback($form, $form_state) {
+function chado_linker__analysis_widget_form_ajax_callback($form, $form_state) {
 
   $field_name = $form_state['triggering_element']['#parents'][0];
   $delta = $form_state['triggering_element']['#parents'][2];
@@ -295,11 +298,11 @@ function chado_linker__contact_widget_form_ajax_callback($form, $form_state) {
 }
 
 /**
- * Theme function for the pub widget.
+ * Theme function for the widget.
  *
  * @param $variables
  */
-function theme_chado_linker__contact_widget($variables) {
+function theme_chado_linker__analysis_widget($variables) {
   $element = $variables['element'];
 
   // These two fields were added to the widget to help identify the fields
@@ -308,8 +311,8 @@ function theme_chado_linker__contact_widget($variables) {
   $fkey = $element['#fkey_field'];
 
   $layout = "
-      <div class=\"pub-widget\">
-        <div class=\"pub-widget-item\">" .
+      <div class=\"chado-linker--analysis-widget\">
+        <div class=\"chado-linker--analysis-widget-item\">" .
     drupal_render($element['name']) . "
         </div>
       </div>
