@@ -715,7 +715,7 @@ class GFF3Importer extends TripalImporter {
     }
 
     $sel_cvterm_sql = "
-      SELECT CVT.cvterm_id
+      SELECT CVT.cvterm_id, CVT.name
       FROM {cvterm} CVT
         LEFT JOIN {cvtermsynonym} CVTS on CVTS.cvterm_id = CVT.cvterm_id
       WHERE CVT.cv_id = :cv_id and
@@ -726,11 +726,13 @@ class GFF3Importer extends TripalImporter {
       ':name' => $type,
       ':synonym' => $type,
     ]);
-    $cvterm_id = $result->fetchField();
+    $cvterm = $result->fetchObject();
 
-    // If the term couldn't be found and it's a property term then insert it
-    // as a local term.
-    if (!$cvterm_id) {
+    if ($cvterm) {
+      $cvterm_id = $cvterm->cvterm_id;
+    }
+    // If the term couldn't be found then insert it as a local term.
+    else {
       $term = [
         'id' => "local:$type",
         'name' => $type,
@@ -741,6 +743,7 @@ class GFF3Importer extends TripalImporter {
       ];
       $cvterm = (object) chado_insert_cvterm($term, ['update_existing' => FALSE]);
       $cvterm_id = $cvterm->cvterm_id;
+      $this->logMessage("Defined new local cv term \"$type\" in cv \"$cv_name\"");
     }
 
     if ($is_prop_type) {
@@ -943,7 +946,7 @@ class GFF3Importer extends TripalImporter {
     preg_match('/[a-zA-Z0-9\.:\^\*\$@!\+_\?\-\|]*/', $ret['landmark'], $matches);
     if ($matches[0] != $ret['landmark']) {
       throw new Exception(t("Landmark/seqid !landmark contains invalid
-        characters. Only characters included in this regular expression is
+        characters. Only characters included in this regular expression are
         allowed [a-zA-Z0-9.:^*$@!+_?-|]",
         ['!landmark' => $ret['landmark']]));
     }
@@ -1087,7 +1090,7 @@ class GFF3Importer extends TripalImporter {
           }
         }
         else {
-          throw new Exception(t('The "Target" attribute is incorreclty formatted for the feature "%uniquename."',
+          throw new Exception(t('The "Target" attribute is incorrectly formatted for the feature "%uniquename."',
               ['%uniquename' => $ret['uniquename']]));
         }
       }
@@ -1370,7 +1373,7 @@ class GFF3Importer extends TripalImporter {
         $rstart = $region_matches[2];
         $rend = $region_matches[3];
         if (!$this->landmark_type) {
-          throw new Exception(t('The landmark, !landmark, cannot be added becuase no landmark type was provided. Please redo the importer job and specify a landmark type.',
+          throw new Exception(t('The landmark, !landmark, cannot be added because no landmark type was provided. Please redo the importer job and specify a landmark type.',
               ['!landmark' => $rid]));
         }
         $this->insertLandmark($rid);
@@ -1633,10 +1636,11 @@ class GFF3Importer extends TripalImporter {
         // Get the name for the protein
         $name = $parent_name;
         $uname = $parent_name . '-protein';
-        // If regexes are provdied then use those to create the protein name.
+        // If regexes are provided then use those to create the protein name.
         if ($this->re_mrna and $this->re_protein) {
           $uname = preg_replace("/" . $this->re_mrna . "/", $this->re_protein, $parent_name);
         }
+        $cds_organism_id = array_key_exists('organism_id', $cds)?$cds['organism_id']:NULL;
 
         // Now create the protein feature.
         $feature = [
@@ -1656,7 +1660,7 @@ class GFF3Importer extends TripalImporter {
           'dbxrefs' => [],
           'terms' => [],
           'derives_from' => NULL,
-          'organism' => $cds['organism_id'],
+          'organism' => $cds_organism_id,
           'target' => [],
           'properties' => [],
           'parent' => $cds['parent'],
@@ -2272,9 +2276,13 @@ class GFF3Importer extends TripalImporter {
     $this->setItemsHandled(0);
     $this->setTotalItems($num_batches);
     $organism_id = $this->organism->getID();
+    $landmark_cvterm = $this->landmark_cvterm;
 
     $sql = "SELECT name, uniquename, feature_id FROM {feature} "
          . "WHERE uniquename IN (:landmarks) AND organism_id=:organism_id";
+    if ($landmark_cvterm) {
+      $sql .= " AND type_id=:type_id";
+    }
     $i = 0;
     $total = 0;
     $batch_num = 1;
@@ -2293,8 +2301,16 @@ class GFF3Importer extends TripalImporter {
       if ($i == $batch_size or $total == $num_landmarks) {
         if (count($names) > 0) {
           $args = [':landmarks' => $names, ':organism_id' => $organism_id];
+          if ($landmark_cvterm) {
+            $args[':type_id'] = $landmark_cvterm->getValue('cvterm_id');
+          }
           $results = chado_query($sql, $args);
           while ($f = $results->fetchObject()) {
+            if (($this->landmarks[$f->uniquename]) and ($this->landmarks[$f->uniquename] != $f->feature_id)) {
+              throw new Exception(t('The landmark "!uniquename" is ambiguous for this organism.'
+                                  . ' Please redo the importer job and specify a landmark type.',
+                ['!uniquename' => $f->uniquename]));
+            }
             $this->landmarks[$f->uniquename] = $f->feature_id;
           }
         }
@@ -2989,6 +3005,7 @@ class GFF3Importer extends TripalImporter {
     $this->setTotalItems($num_batches);
 
     $init_sql = "INSERT INTO {analysisfeature} (feature_id, analysis_id, significance) VALUES \n";
+    $sql = '';
     $i = 0;
     $total = 0;
     $batch_num = 1;
@@ -3006,7 +3023,7 @@ class GFF3Importer extends TripalImporter {
         $sql .= "(:feature_id_$i, :analysis_id_$i, :significance_$i),\n";
         $args[":feature_id_$i"] = $feature_id;
         $args[":analysis_id_$i"] = $this->analysis->getID();
-        if (strcmp($feature['score'], '.') != 0) {
+        if (array_key_exists('score', $feature) and (strcmp($feature['score'], '.') != 0)) {
           $args[":significance_$i"] = $feature['score'];
         }
         else {
