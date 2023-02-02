@@ -332,8 +332,8 @@ class TripalJob {
         if ($lastparam->getName() == 'job_id') {
           $arguments[] = $this->job->job_id;
         }
-        else {
-          $arguments[] = $this;
+        elseif ($lastparam->getName() == 'job') {
+          $arguments['job'] = $this;
         }
       }
 
