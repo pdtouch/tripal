@@ -307,14 +307,12 @@ class ChadoStorageTest extends ChadoTestBrowserBase {
       $this->assertTrue($success, "Loading values after adding " . $field['field_name'] . " was not success (i.e. did not return TRUE).");
 
       // Then we test that the values are now in the types that we passed in.
-      /* Not working yet...
       foreach ($expected_values as $deets) {
         list($Dfield, $Ddelta, $Dproperty, $Dvalue) = $deets;
         $context = "Field: " . $Dfield . "; Ddelta: " . $Ddelta . "; Property: " . $Dproperty . "; Expected Value: " . $Dvalue;
         $Gvalue = $values[$Dfield][$Ddelta][$Dproperty]['value']->getValue();
         $this->assertEquals($Dvalue, $Gvalue, "Could not load the value we expected but loaded $Gvalue instead ($context)");
       }
-      */
     } // End of foreach field.
   }
 
@@ -382,7 +380,7 @@ class ChadoStorageTest extends ChadoTestBrowserBase {
         'propertyType_options' => [
           'action' => 'store',
           'chado_table' => 'feature',
-          'chado_column' => 'feature_id',
+          'chado_column' => 'name',
         ],
         'expected_value' => 'test_gene_name',
       ],
