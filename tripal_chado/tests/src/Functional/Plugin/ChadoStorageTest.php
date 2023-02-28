@@ -10,7 +10,16 @@ use Drupal\tripal\TripalVocabTerms\TripalTerm;
 use Drupal\Tests\tripal_chado\Functional\MockClass\FieldConfigMock;
 
 /**
- * Tests for the ChadoCVTerm classes
+ * Tests for the ChadoStorage Class.
+ *
+ * Testing of public functions in each test method.
+ *  - testChadoStorage (OLD): addTypes, getTypes, loadValues
+ *  - testChadoStorageCRUDtypes: addTypes, validateTypes(), getTypes,
+ *      loadValues, removeTypes
+ *  - testChadoStorageCRUDvalues: insertValues, loadValues, updateValues,
+ *      validateValues, findValues, selectChadoRecord, validateSize
+ *
+ * Not Implemented in ChadoStorage: deleteValues, findValues
  *
  * @group Tripal
  * @group Tripal Chado
@@ -21,8 +30,11 @@ class ChadoStorageTest extends ChadoTestBrowserBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['tripal', 'field_ui'];
+  protected static $modules = ['tripal', 'tripal_chado', 'field_ui'];
 
+  /**
+   * Protected variables set during setUp and used in tests.
+   */
   protected $content_entity_id;
   protected $content_type;
   protected $organism_id;
@@ -170,10 +182,147 @@ class ChadoStorageTest extends ChadoTestBrowserBase {
   }
 
   /**
-   * Tests the ChadoIdSpace Class
+   * Tests the *Types() and loadValues() methods of the ChadoStorage class.
    *
-   * @Depends Drupal\tripal_chado\Task\ChadoInstallerTest::testPerformTaskInstaller
+   * @dataProvider provideFields
    *
+   * Summary (for each dataset provided by provideFields):
+   *  - Create TripalStoragePropertyType and TripalStoragePropertyValue objects
+   *    for all fields + test they are as expected.
+   *  - Use addTypes() with the above property types and check it was successful.
+   *  - Use validateTypes() to confirm they are valid.
+   *  - Use getTypes() to confirm we can retrieve the types we added.
+   *  - Use loadValues() to confirm we can load the chado values the property
+   *    types refer to.
+   *  - Use removeTypes() and then getTypes() to check that we can remove types
+   *    successfully.
+   */
+  public function testChadoStorageCRUDtypes($fields) {
+
+    // Get plugin managers we need for our testing.
+    $storage_manager = \Drupal::service('tripal.storage');
+    $chado_storage = $storage_manager->createInstance('chado_storage');
+
+    $propertyTypes = [];
+    $propertyValues = [];
+    foreach($fields as $field) {
+
+      // Testing the Property Type + Value class creation
+      foreach($field['propertyTypes'] as $key => $details) {
+
+        // First we try to create it.
+        switch($details['type']) {
+          case 'int':
+            $new_prop_type = new ChadoIntStoragePropertyType(
+              $this->content_type,
+              $field['field_name'],
+              $details['chado_column'],
+              $details['term_accession'],
+              $details['propertyType_options']
+            );
+            break;
+          case 'varchar':
+            $new_prop_type = new ChadoVarCharStoragePropertyType(
+              $this->content_type,
+              $field['field_name'],
+              $details['chado_column'],
+              $details['term_accession'],
+              $details['size'],
+              $details['propertyType_options']
+            );
+            break;
+          default:
+            $this->assertFalse(TRUE, "There is an unsupported type in the data provider: " . $details['type']);
+        }
+
+        // Then we test that we were able to create them.
+        $context = "Field: " . $field['field_name'] . "; Column: " . $details['chado_column'] . "; Key: " . $key;
+        $this->assertIsObject($new_prop_type, "Unable to create the property TYPE ($context).");
+        // $this->assertIsObject($new_prop_value, "Unable to create the property VALUE ($context).");
+
+        // Then we add it to the list for further testing later.
+        $propertyTypes[$key] = $new_prop_type;
+        // $propertyValues[$key] = $new_prop_value;
+      } // End of foreach property type.
+    } // End of foreach field.
+  }
+
+  /**
+   * Provides fields with property types for use in the above tests.
+   *
+   * @return array
+   *   Returns an array of test datasets. Each dataset should have a
+   *   single key of `fields` which is an array of fields to be tested.
+   *   Each field will define the following:
+   *    - field_name (string): the machine name of the field
+   *    - field_label (string): the human-readable name of the field
+   *    - chado_table (string): the name of the chado table
+   *    - chado_column (string): the name of the column this field is primarily managing
+   *    - storage_settings (array): an array of field storage settings
+   *    - propertyTypes (array): an array of info about properties this field would have.
+   *        Each member of this array should have the following:
+   *           - type
+   *           - chado_column
+   *           - term_accession
+   *           - propertyType_options
+   *         Some will have additional keys needed by that property type.
+   */
+  public function provideFields() {
+
+    // Each key in this array is a test dataset.
+    $data = [];
+
+    // The first test dataset is a single field with only one property.
+    // This is the simplest case *smiles*
+    // To test this we will generate the types as they would be for a
+    // gene name field  with the data stored in feature.name.
+    // Term: schema:name. Existing Value: test_gene_name
+    $this_dataset = [];
+    $this_dataset['fields']['schema__name'] = [
+      'field_name'  => 'schema__name',
+      'field_label' => 'Gene Name',
+      'chado_table' => 'feature',
+      'chado_column' =>'name',
+      'storage_settings' => [
+        'storage_plugin_id' => 'chado_storage',
+        'storage_plugin_settings' => [
+          'base_table' => 'feature',
+        ],
+      ],
+    ];
+    $this_dataset['fields']['schema__name']['propertyTypes'] = [
+      'feature_id' => [
+        'type' => 'int',
+        'chado_column' => 'feature_id',
+        'term_accession' => 'SIO:000729',
+        'propertyType_options' => [
+          'action' => 'store_id',
+          'drupal_store' => TRUE,
+          'chado_table' => 'feature',
+          'chado_column' => 'feature_id',
+        ]
+      ],
+      'name' => [
+        'type' => 'varchar',
+        'chado_column' => 'name',
+        'term_accession' => 'schema:name',
+        'size' => 255,
+        'propertyType_options' => [
+          'action' => 'store',
+          'chado_table' => 'feature',
+          'chado_column' => 'feature_id',
+        ],
+      ],
+    ];
+    $data['single field with one property'] = $this_dataset;
+
+    return $data;
+  }
+
+  /**
+   * Tests the *Types() and loadValues() methods of the ChadoStorage class.
+   *
+   * OLD STYLE TEST.
    */
   public function testChadoStorage() {
 
