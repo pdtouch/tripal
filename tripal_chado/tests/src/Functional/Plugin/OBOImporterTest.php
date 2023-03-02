@@ -10,11 +10,11 @@ use Drupal\tripal\TripalVocabTerms\TripalTerm;
 use Drupal\Tests\tripal_chado\Functional\MockClass\FieldConfigMock;
 
 /**
- * Tests for the ChadoCVTerm classes
+ * Tests OBO Importer implementation of the TripalImporter Plugin Type.
  *
  * @group Tripal
  * @group Tripal Chado
- * @group Tripal Chado ChadoStorage
+ * @group Tripal Importer
  */
 class OBOImporterTest extends ChadoTestBrowserBase {
 

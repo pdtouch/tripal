@@ -12,7 +12,6 @@ use Drupal\tripal\Entity\TripalEntity;
  *
  * @group Tripal
  * @group Tripal Chado
- * @group Tripal Chado ChadoStorage
  * @group Tripal Chado Fields
  */
 class TripalField_chado_linker__propTest extends ChadoTestBrowserBase {
