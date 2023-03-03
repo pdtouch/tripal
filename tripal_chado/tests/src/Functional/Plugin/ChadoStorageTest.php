@@ -5,6 +5,7 @@ namespace Drupal\Tests\tripal_chado\Functional;
 use Drupal\tripal_chado\TripalStorage\ChadoIntStoragePropertyType;
 use Drupal\tripal_chado\TripalStorage\ChadoVarCharStoragePropertyType;
 use Drupal\tripal_chado\TripalStorage\ChadoTextStoragePropertyType;
+use Drupal\tripal\TripalStorage\StoragePropertyTypeBase;
 use Drupal\tripal\TripalStorage\StoragePropertyValue;
 use Drupal\tripal\TripalVocabTerms\TripalTerm;
 use Drupal\Tests\tripal_chado\Functional\MockClass\FieldConfigMock;
@@ -160,7 +161,7 @@ class ChadoStorageTest extends ChadoTestBrowserBase {
       'term' => 'SIO:000729',
       'type' => 'int',
       'action' => 'store_id',
-      'name' => 'primary key',
+      'name' => 'primary_key',
       'drupal_store' => TRUE,
       'chado_column' => 'db_id',
       'chado_table' => 'db',
@@ -240,7 +241,24 @@ class ChadoStorageTest extends ChadoTestBrowserBase {
     // Can we retrieve them?
     $retrieved_types = $chado_storage->getTypes();
     $this->assertCount($num_properties, $retrieved_types, "Did not retrieve the expected number of PropertyTypes when using getTypes().");
+    foreach ($retrieved_types as $rtype) {
+      $this->assertInstanceOf(StoragePropertyTypeBase::class, $rtype, "The retrieved property type does not inherit from our StoragePropertyTypeBase?");
+      $rkey = $rtype->getKey();
+      $this->assertArrayHasKey($rkey, $propertyTypes, "We did not add a type with the key '$rkey' but we did retrieve it?");
+    }
 
     // Can we remove them?
+    $remove_me = array_pop($propertyTypes);
+    $removed_key = $remove_me->getKey();
+    $chado_storage->removeTypes( [ $remove_me ] );
+    // We can only check this by then retrieving them again.
+    $retrieved_types = $chado_storage->getTypes();
+    $this->assertCount(($num_properties -1), $retrieved_types, "Did not retrieve the expected number of PropertyTypes when using getTypes() after removing one.");
+    foreach ($retrieved_types as $rtype) {
+      $this->assertInstanceOf(StoragePropertyTypeBase::class, $rtype, "The retrieved property type does not inherit from our StoragePropertyTypeBase?");
+      $rkey = $rtype->getKey();
+      $this->assertNotEquals($rkey, $removed_key, "We were not able to remove the property with key $removed_key as it was still returned by getTypes().");
+    }
+
   }
 }

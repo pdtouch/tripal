@@ -57,9 +57,9 @@ class ChadoStorage extends PluginBase implements TripalStorageInterface {
     return $chado;
   }
 
-	/**
-	 * @{inheritdoc}
-	 */
+  /**
+   * @{inheritdoc}
+   */
   public function addTypes($types) {
     $logger = \Drupal::service('tripal.logger');
 
@@ -106,8 +106,8 @@ class ChadoStorage extends PluginBase implements TripalStorageInterface {
   }
 
   /**
-	 * @{inheritdoc}
-	 */
+   * @{inheritdoc}
+   */
   public function removeTypes($types) {
 
     foreach ($types as $type) {
@@ -116,7 +116,7 @@ class ChadoStorage extends PluginBase implements TripalStorageInterface {
       $key = $type->getKey();
       if (array_key_exists($entity_type, $this->property_types)) {
         if (array_key_exists($field_type, $this->property_types[$entity_type])) {
-          if (array_key_exists($key, $this->property_types[$entity_type])) {
+          if (array_key_exists($key, $this->property_types[$entity_type][$field_type])) {
             unset($this->property_types[$entity_type][$field_type][$key]);
           }
         }
@@ -156,8 +156,8 @@ class ChadoStorage extends PluginBase implements TripalStorageInterface {
   }
 
   /**
-	 * @{inheritdoc}
-	 */
+   * @{inheritdoc}
+   */
   public function insertValues(&$values) : bool {
     $chado = $this->getChadoConnection();
     $logger = \Drupal::service('tripal.logger');
