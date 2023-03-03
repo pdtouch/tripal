@@ -22,6 +22,8 @@ use Drupal\Tests\tripal_chado\Functional\MockClass\FieldConfigMock;
  *
  * Not Implemented in ChadoStorage: deleteValues, findValues
  *
+ * @covers \Drupal\tripal_chado\Plugin\TripalStorage\ChadoStorage
+ *
  * @group Tripal
  * @group Tripal Chado
  * @group Tripal Chado ChadoStorage
@@ -183,6 +185,10 @@ class ChadoStorageTest extends ChadoTestBrowserBase {
    * NOTE: we don't test validateTypes() here as that acts on StoragePropertyValues.
    *
    * @dataProvider provideTestCases
+   *
+   * @covers \Drupal\tripal_chado\Plugin\TripalStorage\ChadoStorage::addTypes
+   * @covers \Drupal\tripal_chado\Plugin\TripalStorage\ChadoStorage::getTypes
+   * @covers \Drupal\tripal_chado\Plugin\TripalStorage\ChadoStorage::removeTypes
    */
   public function testStoragePropertyTypes(array $fields, array $properties, bool $valid) {
     $propertyTypes = [];
@@ -248,8 +254,8 @@ class ChadoStorageTest extends ChadoTestBrowserBase {
     }
 
     // Can we remove them?
-    $remove_me = array_pop($propertyTypes);
-    $removed_key = $remove_me->getKey();
+    $removed_key = array_rand($propertyTypes);
+    $remove_me = $propertyTypes[$removed_key];
     $chado_storage->removeTypes( [ $remove_me ] );
     // We can only check this by then retrieving them again.
     $retrieved_types = $chado_storage->getTypes();
@@ -260,5 +266,31 @@ class ChadoStorageTest extends ChadoTestBrowserBase {
       $this->assertNotEquals($rkey, $removed_key, "We were not able to remove the property with key $removed_key as it was still returned by getTypes().");
     }
 
+    // Testing expected failures.
+    // We should not be able to add types which are not the right class.
+    $not_good_types = [
+      "a string" => $this->getRandomGenerator()->word(rand(5,30)),
+      "a basic array" => ['a', 'b', 'c'],
+      "a stdclass" => new \StdClass(),
+      "a Storage Property Value" => new StoragePropertyValue(
+        $this->content_type,
+        $this->randomMachineName(25),
+        'name',
+        'SIO:000729',
+        $this->content_entity_id
+      ),
+    ];
+    foreach($not_good_types as $message_part => $type) {
+      $message = "We should not be able to add $message_part masquerading as a property type using addTypes().";
+      ob_start();
+      $return_value = $chado_storage->addTypes([ $type ]);
+      ob_end_clean();
+      $this->assertFalse($return_value, $message);
+    }
+    // We should not be able to add the same properties twice.
+    ob_start();
+    $return_value = $chado_storage->addTypes($propertyTypes);
+    ob_end_clean();
+    $this->assertFalse($return_value, "We should not be able to add the same types again using addTypes().");
   }
 }
