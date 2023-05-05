@@ -34,11 +34,11 @@ class ChadoLocalSourceDataFormatterDefault extends ChadoFormatterBase {
       $content = "<dl class=\"tripal-dl\">";
       $sourcename_val = $item->get('sourcename')->getString() ;
       if ( !empty( $sourcename_val ) ) {
-        $content .= "<dt>Source Name</dt><dd>" . $sourcename_val . "</dd>";
+        $content .= "<dt>Source Name:</dt><dd>" . $sourcename_val . "</dd>";
       }
       $sourceversion_val = $item->get('sourceversion')->getString() ;
       if ( !empty( $sourceversion_val ) ) {
-        $content .= "<dt>Source Version</dt><dd>" . $sourceversion_val . "</dd>";
+        $content .= "<dt>Source Version:</dt><dd>" . $sourceversion_val . "</dd>";
       }
       $sourceuri_val = $item->get('sourceuri')->getString() ;
       if ( !empty( $sourceuri_val ) ) {
@@ -46,7 +46,7 @@ class ChadoLocalSourceDataFormatterDefault extends ChadoFormatterBase {
         if (preg_match('|://|', $sourceuri_val)) {
           $url = Link::fromTextAndUrl($sourceuri_val, Url::fromUri($sourceuri_val, []))->toString();
         }
-        $content .= "<dt>Source URI</dt><dd>" . $url . "</dd>";
+        $content .= "<dt>Source URI:</dt><dd>" . $url . "</dd>";
       }
       $content .= "</dl>";
     }
