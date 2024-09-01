@@ -148,8 +148,14 @@
  *   always returns an array.
  *
  * @ingroup tripal_chado_variables_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_generate_var($table, $values, $base_options = [], $schema_name = NULL) {
+
+  @trigger_error('chado_generate_var() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
+
   // Set default schema.
   if (!$schema_name) {
     $schema_name = \Drupal::config('tripal_chado.settings')->get('default_schema');
@@ -601,10 +607,14 @@ function chado_generate_var($table, $values, $base_options = [], $schema_name = 
  *   expanded. If the type is a table and it has already been expanded no
  *   changes is made to the returned object
  *
- *
  * @ingroup tripal_chado_variables_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_expand_var($object, $type, $to_expand, $table_options = [], $schema_name = NULL) {
+
+  @trigger_error('chado_expand_var() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
 
   // Set default schema.
   if (!$schema_name) {

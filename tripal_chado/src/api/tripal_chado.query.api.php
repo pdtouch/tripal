@@ -256,8 +256,13 @@ use Drupal\Component\Utility\Html;
  *  The maximum rank.
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_get_table_max_rank($tablename, $where_options, $chado_schema_name = NULL) {
+
+  @trigger_error('chado_get_table_max_rank() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
 
   $where_clauses = [];
   $where_args = [];
@@ -306,8 +311,14 @@ function chado_get_table_max_rank($tablename, $where_options, $chado_schema_name
  * @see chado_set_active()
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function hook_chado_connection_alter(&$settings) {
+
+  @trigger_error('hook_chado_connection_alter() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
+
   // This example shows how we could make sure no table of the 'public' schema
   // would be allowed in the coming queries: to do so, the caller will call
   // "chado_set_active('chado_only');" and the hook will remove 'public' from
@@ -345,8 +356,13 @@ function hook_chado_connection_alter(&$settings) {
  *  Global variable $GLOBALS['chado_active_db'].
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_set_active($dbname = 'default', $chado_schema_name = NULL) {
+
+  @trigger_error('chado_set_active() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
 
   $chado_active_db = \Drupal::service('tempstore.private')->get('chado_active_db');
 
@@ -452,8 +468,13 @@ function chado_set_active($dbname = 'default', $chado_schema_name = NULL) {
  * well.
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_insert_record($table, $values, $options = [], $chado_schema_name = NULL) {
+
+  @trigger_error('chado_insert_record() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
 
   $print_errors = (isset($options['print_errors'])) ? $options['print_errors'] : FALSE;
 
@@ -770,8 +791,13 @@ function chado_insert_record($table, $values, $options = [], $chado_schema_name 
  * @TODO: Support Complex filtering as is done in chado_select_record();
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_update_record($table, $match, $values, $options = NULL, $chado_schema_name = NULL) {
+
+  @trigger_error('chado_update_record() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
 
   $print_errors = (isset($options['print_errors'])) ? $options['print_errors'] : FALSE;
 
@@ -1033,8 +1059,13 @@ function chado_update_record($table, $match, $values, $options = NULL, $chado_sc
  * @TODO: Support Complex filtering as is done in chado_select_record();
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_delete_record($table, $match, $options = NULL, $chado_schema_name = NULL) {
+
+  @trigger_error('chado_delete_record() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
 
   $print_errors = (isset($options['print_errors'])) ? $options['print_errors'] : FALSE;
 
@@ -1275,8 +1306,14 @@ function chado_delete_record($table, $match, $options = NULL, $chado_schema_name
  *   even for the same field can be entered.
  *
  * @ingroup tripal_chado_query_api
+ * 
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_select_record($table, $columns, $values, $options = NULL, $chado_schema_name = NULL) {
+
+  @trigger_error('chado_select_record() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
+
   // Set defaults for options. If we don't set defaults then
   // we get memory leaks when we try to access the elements.
   if (!is_array($options)) {
@@ -1693,8 +1730,13 @@ function chado_select_record($table, $columns, $values, $options = NULL, $chado_
  *   value.
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_select_record_check_value_type(&$op, &$value, $type) {
+
+  @trigger_error('chado_select_record_check_value_type() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
 
   if ($value === NULL) {
     $op = 'IS NULL';
@@ -1749,8 +1791,14 @@ function chado_select_record_check_value_type(&$op, &$value, $type) {
  * @endcode
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_query($sql, $args = [], $options = [], $chado_schema_name = NULL) {
+
+  @trigger_error('chado_query() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
+
   $results = NULL;
 
   // Check if Chado is within the same database as Drupal (i.e. local).
@@ -1915,8 +1963,13 @@ function chado_query($sql, $args = [], $options = [], $chado_schema_name = NULL)
  *  The name of the chado schema the action should be taken on.
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function hook_chado_query_alter(&$sql, &$args, $chado_schema_name = NULL) {
+
+  @trigger_error('hook_chado_query_alter() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
 
   // The following code is an example of how this alter function might be used.
   // Say you would like only a portion of node => feature connections available
@@ -1960,8 +2013,14 @@ function hook_chado_query_alter(&$sql, &$args, $chado_schema_name = NULL) {
  *   executed correctly
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_pager_query($query, $args, $limit, $element, $count_query = '', $chado_schema_name = NULL) {
+
+  @trigger_error('chado_pager_query() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
+
   // Get the page and offset for the pager.
   $page_arg = isset($_GET['page']) ? $_GET['page'] : '0';
   $pages = explode(',', $page_arg);
@@ -2005,8 +2064,14 @@ function chado_pager_query($query, $args, $limit, $element, $count_query = '', $
  *   The $element argument that was passed to the chado_pager_query function.
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_pager_get_count($element) {
+
+  @trigger_error('chado_pager_get_count() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
+
   $q = $_GET['q'];
 
   if (array_key_exists($q, $GLOBALS['chado_pager']) and
@@ -2068,8 +2133,12 @@ function chado_pager_get_count($element) {
  * genus and species.  The cvterm is also specified using its foreign key and
  * the cv_id for the cvterm is nested as well.
  *
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function chado_schema_get_foreign_key($table_desc, $field, $values, $options = NULL, $chado_schema_name = NULL) {
+
+  @trigger_error('chado_schema_get_foreign_key() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
 
   $messenger = \Drupal::messenger();
 
@@ -2165,8 +2234,13 @@ function chado_schema_get_foreign_key($table_desc, $field, $values, $options = N
  *       determine you are changing the name of the correct schema.
  *
  * @ingroup tripal_chado_query_api
+ *  
+ * @deprecated and is removed from tripal:4.5.0.
+ *   See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html
  */
 function hook_chado_get_schema_name_alter($schema_name, $context) {
+
+  @trigger_error('hook_chado_get_schema_name_alter() is deprecated and is removed from drupal:4.5.0. See https://github.com/tripal/tripal/issues/1343 and https://tripaldoc.readthedocs.io/en/latest/dev_guide/deprecations.html', E_USER_DEPRECATED);
 
   // First we check which schema was passed to chado_get_schema().
   // Notice that we do not use $schema_name since it may already have
